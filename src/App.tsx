@@ -53,6 +53,15 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  const handleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      console.error("Erro detalhado de login:", error);
+      toast.error(`Falha ao entrar: ${error.message || 'Erro desconhecido'}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -84,7 +93,7 @@ export default function App() {
           </CardHeader>
           <CardContent className="flex flex-col gap-6 pt-6">
             <Button 
-              onClick={signInWithGoogle} 
+              onClick={handleLogin} 
               className="h-12 w-full bg-primary text-white hover:bg-primary/90 transition-all"
             >
               <LogIn className="mr-2 h-5 w-5" />
