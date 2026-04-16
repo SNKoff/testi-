@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: fornecedores
+    // Fields:
+    //   - nome: string (required)
+    //   - contato: string (optional)
+    //
+    // Collection: usuarios
+    // Fields:
+    //   - nome: string (required)
+    //   - cargo: string (required, enum: Vendedor, Gerente, Estoquista)
+    //
+    // Collection: produtos
+    // Fields:
+    //   - nome: string (required)
+    //   - sku: string (required)
+    //   - precoCusto: number (required)
+    //   - precoVenda: number (required)
+    //   - qtd: number (required)
+    //   - estoqueMinimo: number (required)
+    //   - fornecedor_id: string (required)
+    //
+    // Collection: movimentacoes
+    // Fields:
+    //   - tipo: string (required, enum: Venda, Baixa (Perda/Quebra), Entrada)
+    //   - produto_id: string (required)
+    //   - usuario_id: string (required)
+    //   - qtd: number (required)
+    //   - data: string (required, ISO 8601)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "nickolasdigital520@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    function isValidNumber(val, min) {
+      return val is number && val >= min;
+    }
+
+    function isValidList(val) {
+      return val is list;
+    }
+
+    // Rules for Fornecedores
+    match /fornecedores/{fornecedorId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidString(request.resource.data.nome, 1, 100);
+      allow update: if isAuthenticated() && isValidString(request.resource.data.nome, 1, 100);
+      allow delete: if isAdmin();
+    }
+
+    // Rules for Usuarios
+    match /usuarios/{usuarioId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidString(request.resource.data.nome, 1, 100);
+      allow update: if isAuthenticated() && isValidString(request.resource.data.nome, 1, 100);
+      allow delete: if isAdmin();
+    }
+
+    // Rules for Produtos
+    match /produtos/{produtoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        isValidString(request.resource.data.nome, 1, 100) &&
+        isValidString(request.resource.data.descricao, 0, 1000) &&
+        isValidNumber(request.resource.data.precoCusto, 0) &&
+        isValidNumber(request.resource.data.precoVenda, 0) &&
+        isValidNumber(request.resource.data.qtd, 0) &&
+        isValidNumber(request.resource.data.estoqueMinimo, 0);
+      allow update: if isAuthenticated() && 
+        isValidString(request.resource.data.nome, 1, 100) &&
+        isValidString(request.resource.data.descricao, 0, 1000) &&
+        isValidNumber(request.resource.data.precoCusto, 0) &&
+        isValidNumber(request.resource.data.precoVenda, 0) &&
+        isValidNumber(request.resource.data.qtd, 0) &&
+        isValidNumber(request.resource.data.estoqueMinimo, 0);
+      allow delete: if isAdmin();
+    }
+
+    // Rules for Movimentacoes
+    match /movimentacoes/{movimentacaoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.tipo in ['Venda', 'Baixa (Perda/Quebra)', 'Entrada'] &&
+        isValidNumber(request.resource.data.qtd, 1);
+      allow update, delete: if isAdmin();
+    }
+
+    // Rules for Learning App: Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && request.auth.uid == userId &&
+        isValidString(request.resource.data.nome, 1, 100) &&
+        isValidString(request.resource.data.email, 5, 100) &&
+        isValidString(request.resource.data.nivel, 1, 50) &&
+        isValidList(request.resource.data.cenariosCompletados);
+      allow delete: if isAdmin();
+    }
+
+    // Rules for Learning App: Sessions
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid &&
+        isValidString(request.resource.data.cenario, 1, 100) &&
+        isValidString(request.resource.data.data, 10, 50) &&
+        isValidNumber(request.resource.data.duracao, 0) &&
+        isValidString(request.resource.data.transcricao, 0, 10000) &&
+        isValidList(request.resource.data.errosEncontrados) &&
+        isValidNumber(request.resource.data.nota, 0);
+      allow update, delete: if isAdmin();
+    }
+
+    // Rules for Learning App: Progress
+    match /progress/{progressId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create, update: if isAuthenticated() && request.resource.data.userId == request.auth.uid &&
+        isValidString(request.resource.data.cenario, 1, 100) &&
+        isValidNumber(request.resource.data.tentativas, 0) &&
+        isValidNumber(request.resource.data.melhorNota, 0) &&
+        isValidList(request.resource.data.vocabularioAprendido);
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "fornecedor": {
+      "title": "Fornecedor",
+      "description": "Empresa fornecedora de produtos",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string", "description": "Nome da empresa" },
+        "contato": { "type": "string", "description": "Contato ou e-mail" }
+      },
+      "required": ["nome"]
+    },
+    "usuario": {
+      "title": "Usuário",
+      "description": "Funcionário do sistema",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string", "description": "Nome do funcionário" },
+        "cargo": { "type": "string", "enum": ["Vendedor", "Gerente", "Estoquista"] }
+      },
+      "required": ["nome", "cargo"]
+    },
+    "produto": {
+      "title": "Produto",
+      "description": "Item em estoque",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string", "description": "Nome do produto" },
+        "sku": { "type": "string", "description": "SKU ou código" },
+        "descricao": { "type": "string", "description": "Descrição detalhada do produto" },
+        "precoCusto": { "type": "number", "description": "Preço de custo unitário" },
+        "precoVenda": { "type": "number", "description": "Valor de venda unitário" },
+        "qtd": { "type": "integer", "description": "Quantidade em estoque" },
+        "estoqueMinimo": { "type": "integer", "description": "Limite mínimo de estoque" },
+        "fornecedor_id": { "type": "string", "description": "ID do fornecedor" }
+      },
+      "required": ["nome", "sku", "precoCusto", "precoVenda", "qtd", "estoqueMinimo", "fornecedor_id"]
+    },
+    "movimentacao": {
+      "title": "Movimentação",
+      "description": "Registro de entrada ou saída de estoque",
+      "type": "object",
+      "properties": {
+        "tipo": { "type": "string", "enum": ["Venda", "Baixa (Perda/Quebra)", "Entrada"] },
+        "produto_id": { "type": "string", "description": "ID do produto" },
+        "usuario_id": { "type": "string", "description": "ID do usuário responsável" },
+        "qtd": { "type": "integer", "description": "Quantidade movimentada" },
+        "data": { "type": "string", "format": "date-time", "description": "Data da movimentação" }
+      },
+      "required": ["tipo", "produto_id", "usuario_id", "qtd", "data"]
+    },
+    "appUser": {
+      "title": "App User",
+      "description": "Usuário do aplicativo de aprendizado",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "email": { "type": "string" },
+        "nivel": { "type": "string" },
+        "cenariosCompletados": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["nome", "email", "nivel", "cenariosCompletados"]
+    },
+    "session": {
+      "title": "Session",
+      "description": "Sessão de treinamento",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cenario": { "type": "string" },
+        "data": { "type": "string", "format": "date-time" },
+        "duracao": { "type": "number" },
+        "transcricao": { "type": "string" },
+        "errosEncontrados": { "type": "array", "items": { "type": "string" } },
+        "nota": { "type": "number" }
+      },
+      "required": ["userId", "cenario", "data", "duracao", "transcricao", "errosEncontrados", "nota"]
+    },
+    "progress": {
+      "title": "Progress",
+      "description": "Progresso do usuário em um cenário",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "cenario": { "type": "string" },
+        "tentativas": { "type": "number" },
+        "melhorNota": { "type": "number" },
+        "vocabularioAprendido": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["userId", "cenario", "tentativas", "melhorNota", "vocabularioAprendido"]
+    }
+  },
+  "firestore": {
+    "/fornecedores/{fornecedorId}": { "schema": "fornecedor", "description": "Coleção de fornecedores" },
+    "/usuarios/{usuarioId}": { "schema": "usuario", "description": "Coleção de usuários" },
+    "/produtos/{produtoId}": { "schema": "produto", "description": "Coleção de produtos" },
+    "/movimentacoes/{movimentacaoId}": { "schema": "movimentacao", "description": "Coleção de movimentações" },
+    "/users/{userId}": { "schema": "appUser", "description": "Usuários do app de aprendizado" },
+    "/sessions/{sessionId}": { "schema": "session", "description": "Sessões de treinamento" },
+    "/progress/{progressId}": { "schema": "progress", "description": "Progresso por cenário" }
+  }
+}
